@@ -38,3 +38,8 @@ yarn-error.*
 
 app-example
 node_modules
+
+*.js
+*.jsx
+*.js.map
+*.jsx.map
