@@ -72,7 +72,7 @@ export default function Footer({
     </Pressable>
   );
 }
-  if (!icon.lib) return null; // <-- Adicione esta linha
+  if (!icon.lib) return null; 
   const IconComponent = icon.lib;
   return (
     <Pressable
