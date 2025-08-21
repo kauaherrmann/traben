@@ -28,6 +28,7 @@ export default function RouteMap({
   const first = routeCoords[0];
   const latitudeDelta = initialRegionPadding?.latDelta ?? 0.01;
   const longitudeDelta = initialRegionPadding?.lngDelta ?? 0.01;
+  const LEGAL_LABEL_TOP_INSET = 8;
 
   return (
     <View style={[styles.container, style]}>
@@ -40,7 +41,7 @@ export default function RouteMap({
           latitudeDelta,
           longitudeDelta,
         }}
-         legalLabelInsets={{ top: -20, left: 8, right: 8, bottom: bottomInset }}
+         legalLabelInsets={{ top: LEGAL_LABEL_TOP_INSET, left: 8, right: 8, bottom: bottomInset }}
       >
         <Polyline coordinates={routeCoords} strokeColor={strokeColor} strokeWidth={strokeWidth} />
         {showEndpoints && (
