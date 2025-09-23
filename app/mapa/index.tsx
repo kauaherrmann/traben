@@ -1,32 +1,55 @@
 import React from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import type { LatLng } from 'react-native-maps';
 import RouteMap from '../../src/components/mapa/RouteMap';
-import Footer from '../../src/components/comuns/Footer';
+import { FOOTER_HEIGHT } from '../../src/components/comuns/Footer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Header from '../../src/components/comuns/Header'; // <- add
+import { useRouter } from 'expo-router';
 
-const BG_COLOR = '#070705';
-const FOOTER_HEIGHT = 65;
+const routeCoords: LatLng[] = [
+  { latitude: -23.561414, longitude: -46.655881 },
+  { latitude: -23.5618, longitude: -46.6565 },
+  { latitude: -23.5622, longitude: -46.6572 },
+];
+
+const router = useRouter();
 
 export default function MapaScreen() {
-  const routeCoords: LatLng[] = [
-    { latitude: -23.561414, longitude: -46.655881 },
-    { latitude: -23.5618, longitude: -46.6565 },
-    { latitude: -23.5622, longitude: -46.6572 },
-  ];
+  const insets = useSafeAreaInsets();
+  const bottomInset = FOOTER_HEIGHT + insets.bottom;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: BG_COLOR }]}>
-      <StatusBar barStyle="light-content" backgroundColor={BG_COLOR} />
-      <View style={styles.mapContainer}>
-        <RouteMap routeCoords={routeCoords} bottomInset={FOOTER_HEIGHT + 8} />
+    <View style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+
+      {/* Header sobreposto ao mapa */}
+      <View pointerEvents="box-none" style={styles.headerOverlay}>
+        <Header
+          title="Mapa"
+          showTitle
+          showSearch
+          showNotifications
+          notificationsBadgeCount={2}
+          onPressNotifications={() => router.push('/notificacoes')} 
+          onSubmitSearch={(q) => console.log('Buscar:', q)}
+          // opcional: ajustar intensidade do blur
+          blurIntensity={40}
+        />
       </View>
-      <View style={{ height: FOOTER_HEIGHT }} />
-      <Footer backgroundColor={BG_COLOR} />
-    </SafeAreaView>
+
+      <View style={StyleSheet.absoluteFill}>
+        <RouteMap routeCoords={routeCoords} bottomInset={bottomInset} />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  mapContainer: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#000' },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    zIndex: 10,
+  },
 });

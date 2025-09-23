@@ -2,120 +2,97 @@ import React from 'react';
 import { View, Pressable, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { useRouter, usePathname } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ICONS = [
-  { key: 'route', name: 'route', route: '/mapa' as const, lib: MaterialIcons }, // <- era /flash
-  {
-    key: 'logo',
-    isLogo: true,
-    route: '/traben' as const,
-    imageActive: require('../../../assets/images/logoIcon.png'),
-    imageInactive: require('../../../assets/images/logoIconInativo.png'),
-  },
-  { key: 'globe-americas', name: 'globe-americas', route: '/stats' as const, lib: FontAwesome5 },
-  { key: 'profile', name: 'person', route: '/profile' as const, lib: Ionicons },
+export const FOOTER_HEIGHT = 65;
+
+export type TabPath = '/mapa' | '/traben' | '/glogo' | '/perfil';
+
+interface FooterProps {
+  activePath?: string;
+  onNavigate?: (path: TabPath) => void;
+  backgroundColor?: string;
+}
+const LOGO_SIZE = 40;
+const LogoAtiva = require('../../../assets/images/logoIcon.png');
+const LogoInativa = require('../../../assets/images/logoIconInativo.png');
+
+type IconTab = { path: TabPath; lib: 'mat' | 'ion'; icon: string };
+type ImageTab = { path: TabPath; lib: 'img'; imgActive: any; imgInactive: any };
+const TABS: (IconTab | ImageTab)[] = [
+  { path: '/mapa',   icon: 'route',            lib: 'mat' }, 
+  { path: '/traben', lib: 'img', imgActive: LogoAtiva, imgInactive: LogoInativa },
+  { path: '/glogo',  icon: 'globe-outline',  lib: 'ion' },
+  { path: '/perfil', icon: 'person-outline', lib: 'ion' },
 ];
 
-type FooterProps = {
-  backgroundColor?: string;
-  activeColor?: string;
-  inactiveColor?: string;
-  borderTop?: boolean;
-};
+const ACTIVE_COLOR = '#FFFFFF';
+const INACTIVE_COLOR = 'rgba(255,255,255,0.55)';
 
-export default function Footer({
-  backgroundColor = '#070705',
-  activeColor = '#fff',
-  inactiveColor = 'rgba(255, 255, 255, 0.6)',
-  borderTop = true,
-}: FooterProps) {
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const pathname = usePathname();
+const Footer: React.FC<FooterProps> = ({
+  activePath,
+  onNavigate,
+  backgroundColor = '#000',
+}) => {
+  return (
+    <View style={[styles.wrap, { backgroundColor }]}>
+      {TABS.map((t) => {
+        const active = !!activePath && activePath.startsWith(t.path);
 
-  return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor,
-          paddingBottom: insets.bottom || 8,
-          borderTopWidth: borderTop ? StyleSheet.hairlineWidth : 0,
-          borderTopColor: 'rgba(255,255,255,0.15)',
-        },
-      ]}
-    >
-      <View style={styles.row}>
-       {ICONS.map((icon) => {
-  const isActive = pathname.startsWith(icon.route as any);
-  if (icon.isLogo) {
-  return (
-    <Pressable
-      key={icon.key}
-      style={styles.item}
-      onPress={() => {
-        if (!isActive) router.push(icon.route as any);
-      }}
-    >
-      <Image
-        source={isActive ? icon.imageActive : icon.imageInactive}
-        style={{
-          width: 40,
-          height: 40,
-          opacity: 1,
-        }}
-        resizeMode="contain"
-      />
-    </Pressable>
-  );
-}
-  if (!icon.lib) return null; 
-  const IconComponent = icon.lib;
-  return (
-    <Pressable
-      key={icon.key}
-      style={styles.item}
-      onPress={() => {
-        if (!isActive) router.push(icon.route as any);
-      }}
-    >
-      <IconComponent
-        name={icon.name as any}
-        size={26}
-        color={isActive ? activeColor : inactiveColor}
-      />
-    </Pressable>
-  );
-})}
-      </View>
+        return (
+          <Pressable
+            key={t.path}
+            onPress={() => {
+              if (!active) onNavigate?.(t.path);
+            }}
+            style={({ pressed }) => [
+              styles.item,
+              pressed && { opacity: 0.4 },
+            ]}
+            hitSlop={8}
+          >
+            {t.lib === 'img' ? (
+              <Image
+                source={active ? t.imgActive : t.imgInactive}
+                style={[styles.item, { width: LOGO_SIZE, height: LOGO_SIZE, resizeMode: 'contain' }]}
+              />
+            ) : t.lib === 'mat' ? (
+              <MaterialIcons
+                name={t.icon as any}
+                size={26}
+                color={active ? ACTIVE_COLOR : INACTIVE_COLOR}
+              />
+            ) : (
+              <Ionicons
+                name={t.icon as any}
+                size={26}
+                color={active ? ACTIVE_COLOR : INACTIVE_COLOR}
+              />
+            )}
+          </Pressable>
+        );
+      })}
     </View>
   );
-}
+};
+
+export default Footer;
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 8,
-  },
-  row: {
+  wrap: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
-    minHeight: 56,
+    height: FOOTER_HEIGHT,
+    paddingHorizontal: 4,
   },
   item: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: FOOTER_HEIGHT - 6,
+  },
+  logoImg: {               
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    resizeMode: 'contain',
   },
 });

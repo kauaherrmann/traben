@@ -1,27 +1,54 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Slot, usePathname, router } from 'expo-router';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Footer, { FOOTER_HEIGHT, type TabPath } from '../src/components/comuns/Footer';
+import type { Href } from 'expo-router';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+function LayoutInner() {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
-  
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <View style={styles.root}>
+      <View style={styles.content}>
+        <Slot />
+      </View>
+      <View
+        style={[
+          styles.footerWrap,
+          {
+            height: FOOTER_HEIGHT + insets.bottom,
+            paddingBottom: insets.bottom,
+            backgroundColor: '#000', // <- cobre toda a área inferior
+          },
+        ]}
+      >
+        <Footer
+          activePath={pathname}
+          onNavigate={(path: TabPath) => {
+            if (pathname !== path) router.push(path as Href);
+          }}
+          backgroundColor="#000"
+        />
+      </View>
+    </View>
   );
 }
+
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <LayoutInner />
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#000' },
+  content: { flex: 1 },
+  footerWrap: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 0,
+  },
+});
