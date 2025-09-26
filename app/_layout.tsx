@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Slot, usePathname, router } from 'expo-router';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Footer, { FOOTER_HEIGHT, type TabPath } from '../src/components/comuns/Footer';
+import Footer, { FOOTER_HEIGHT, type TabPath } from '../src/features/comuns/Footer';
 import type { Href } from 'expo-router';
 
 function LayoutInner() {
