@@ -11,27 +11,28 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
 
 export type HeaderProps = {
-  // Título (lado esquerdo)
   title?: string | React.ReactNode;
   showTitle?: boolean;
   titleStyle?: StyleProp<TextStyle>;
-
-  // Voltar (opcional, lado esquerdo)
   showBackButton?: boolean;
   onPressBack?: () => void;
 
-  // Ações à direita
+  // Menu (hambúrguer)
   showMenu?: boolean;
   onPressMenu?: () => void;
   menuIconName?: React.ComponentProps<typeof Ionicons>['name'];
 
-  // Aparência
+  // NOVO (já existia no type, agora implementado)
+  showNotifications?: boolean;
+  onPressNotifications?: () => void;
+  notificationsBadgeCount?: number;
+
   color?: string;
   backgroundColor?: string;
   bottomDivider?: boolean;
-
   containerStyle?: StyleProp<ViewStyle>;
 };
 
@@ -39,7 +40,6 @@ export default function Header({
   title = 'Perfil',
   showTitle = true,
   titleStyle,
-
   showBackButton = false,
   onPressBack,
 
@@ -47,13 +47,17 @@ export default function Header({
   onPressMenu,
   menuIconName = 'reorder-three-outline',
 
+  showNotifications = false,
+  onPressNotifications,
+  notificationsBadgeCount = 0,
+
   color = '#FFFFFF',
   backgroundColor = 'transparent',
   bottomDivider = false,
-
   containerStyle,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const hasBadge = notificationsBadgeCount > 0;
 
   return (
     <View
@@ -65,7 +69,7 @@ export default function Header({
       ]}
     >
       <View style={styles.row}>
-        {/* Esquerda: voltar + título */}
+        {/* Esquerda */}
         <View style={styles.left}>
           {showBackButton && (
             <IconButton
@@ -75,7 +79,6 @@ export default function Header({
               accessibilityLabel="Voltar"
             />
           )}
-
           {showTitle && (
             typeof title === 'string'
               ? <Text numberOfLines={1} style={[styles.titleLeft, { color }, titleStyle]}>{title}</Text>
@@ -83,16 +86,44 @@ export default function Header({
           )}
         </View>
 
-        {/* Direita: hambúrguer */}
+        {/* Direita: Notificações (opcional) + Menu (opcional) */}
         <View style={styles.right}>
-          {showMenu && (
-            <IconButton
-              name={menuIconName}
-              color={color}
-              onPress={onPressMenu}
-              accessibilityLabel="Menu"
-            />
+          {showNotifications && (
+            <View style={styles.notificationWrap}>
+              <Pressable
+                onPress={onPressNotifications}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Notificações"
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color={color}
+                />
+              </Pressable>
+              {hasBadge && <View style={styles.badge} />}
+            </View>
           )}
+
+            {showMenu && (
+              <Pressable
+                onPress={onPressMenu}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Menu"
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Entypo name="menu" size={24} color={color} />
+              </Pressable>
+            )}
         </View>
       </View>
     </View>
@@ -165,6 +196,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 22,
+  },
+  notificationWrap: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF3B30',
+    borderWidth: 2,
+    borderColor: '#000',
   },
   bottomDivider: {
     borderBottomColor: 'rgba(255,255,255,0.08)',
