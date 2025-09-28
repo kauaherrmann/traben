@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Pressable, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
-export const FOOTER_HEIGHT = 65;
+import Feather from '@expo/vector-icons/Feather';
+export const FOOTER_HEIGHT = 45;
 
 export type TabPath = '/mapa' | '/traben' | '/glogo' | '/perfil';
 
@@ -12,16 +12,20 @@ interface FooterProps {
   onNavigate?: (path: TabPath) => void;
   backgroundColor?: string;
 }
+
 const LOGO_SIZE = 40;
 const LogoAtiva = require('../../../assets/images/logoIcon.png');
 const LogoInativa = require('../../../assets/images/logoIconInativo.png');
 
-type IconTab = { path: TabPath; lib: 'mat' | 'ion'; icon: string };
-type ImageTab = { path: TabPath; lib: 'img'; imgActive: any; imgInactive: any };
+// Tipos discriminados
+type BaseTab = { path: TabPath };
+type IconTab = BaseTab & { lib: 'mat' | 'ion' | 'fea'; icon: string };
+type ImageTab = BaseTab & { lib: 'img'; imgActive: any; imgInactive: any };
+
 const TABS: (IconTab | ImageTab)[] = [
-  { path: '/mapa',   icon: 'route',            lib: 'mat' }, 
+  { path: '/mapa',   icon: 'route',    lib: 'mat' },
   { path: '/traben', lib: 'img', imgActive: LogoAtiva, imgInactive: LogoInativa },
-  { path: '/glogo',  icon: 'globe-outline',  lib: 'ion' },
+  { path: '/glogo',  icon: 'grid',  lib: 'fea' },
   { path: '/perfil', icon: 'person-outline', lib: 'ion' },
 ];
 
@@ -53,12 +57,18 @@ const Footer: React.FC<FooterProps> = ({
             {t.lib === 'img' ? (
               <Image
                 source={active ? t.imgActive : t.imgInactive}
-                style={[styles.item, { width: LOGO_SIZE, height: LOGO_SIZE, resizeMode: 'contain' }]}
+                style={styles.logoImg}
               />
             ) : t.lib === 'mat' ? (
               <MaterialIcons
                 name={t.icon as any}
                 size={26}
+                color={active ? ACTIVE_COLOR : INACTIVE_COLOR}
+              />
+            ) : t.lib === 'fea' ? (
+              <Feather
+                name={t.icon as any}
+                size={25}
                 color={active ? ACTIVE_COLOR : INACTIVE_COLOR}
               />
             ) : (
@@ -88,9 +98,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 20,
     height: FOOTER_HEIGHT - 6,
   },
-  logoImg: {               
+  logoImg: {
     width: LOGO_SIZE,
     height: LOGO_SIZE,
     resizeMode: 'contain',

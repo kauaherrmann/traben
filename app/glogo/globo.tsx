@@ -1,10 +1,24 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import Header from '@/src/features/comuns/HeaderFlutuante';
 
 export default function GlogoScreen() {
+    const router = useRouter();
+
   return (
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <Header
+          title="Glogo"
+          showTitle
+          showSearch
+          showNotifications
+          notificationsBadgeCount={2}
+          onPressNotifications={() => router.push('/notificacoes')}
+          onSubmitSearch={(q) => console.log('Buscar:', q)}
+          blurIntensity={40}
+        />
       <View style={styles.center}>
         <Text style={styles.txt}>Tela Glogo</Text>
       </View>

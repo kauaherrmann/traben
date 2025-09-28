@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import type { LatLng } from 'react-native-maps';
-import RouteMap from '../../src/components/mapa/RouteMap';
-import { FOOTER_HEIGHT } from '../../src/components/comuns/Footer';
+import RouteMap from '../../src/features/mapa/RouteMap';
+import { FOOTER_HEIGHT } from '../../src/features/comuns/Footer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Header from '../../src/components/comuns/Header'; // <- add
+import Header from '../../src/features/comuns/HeaderFlutuante'; // <- add
 import { useRouter } from 'expo-router';
+import HeaderFlutuante from '../../src/features/comuns/HeaderFlutuante';
 
 const routeCoords: LatLng[] = [
   { latitude: -23.561414, longitude: -46.655881 },
@@ -25,15 +26,12 @@ export default function MapaScreen() {
 
       {/* Header sobreposto ao mapa */}
       <View pointerEvents="box-none" style={styles.headerOverlay}>
-        <Header
+        <HeaderFlutuante
           title="Mapa"
-          showTitle
           showSearch
           showNotifications
           notificationsBadgeCount={2}
-          onPressNotifications={() => router.push('/notificacoes')} 
-          onSubmitSearch={(q) => console.log('Buscar:', q)}
-          // opcional: ajustar intensidade do blur
+          onPressNotifications={() => router.push('/notificacoes')}
           blurIntensity={40}
         />
       </View>

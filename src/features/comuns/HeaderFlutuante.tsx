@@ -14,22 +14,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 
-export type HeaderProps = {
-  // Título
+export type HeaderFlutuanteProps = {
+  // Título (lado esquerdo)
   title?: string | React.ReactNode;
   showTitle?: boolean;
   titleStyle?: StyleProp<TextStyle>;
 
-  // Voltar
+  // Voltar (opcional)
   showBackButton?: boolean;
   onPressBack?: () => void;
 
-  // Notificações
+  // Notificações (lado direito)
   showNotifications?: boolean;
   onPressNotifications?: () => void;
   notificationsBadgeCount?: number;
 
-  // Busca
+  // Busca (centro)
   showSearch?: boolean;
   searchPlaceholder?: string;
   searchValue?: string;
@@ -39,11 +39,18 @@ export type HeaderProps = {
   onClearSearch?: () => void;
 
   // Aparência
+  color?: string;               // cor de texto/ícones
+  backgroundColor?: string;     // fundo fora da pílula (overlay)
   blurIntensity?: number;
+  blurTint?: 'dark' | 'light' | 'default';
+  showBlur?: boolean;           // desliga o BlurView se false
+  pillBackgroundColor?: string; // cor da pílula
+  elevated?: boolean;           // sombra da pílula
+
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-export default function Header({
+export default function HeaderFlutuante({
   title = 'Mapa',
   showTitle = true,
   titleStyle,
@@ -63,17 +70,23 @@ export default function Header({
   onSubmitSearch,
   onClearSearch,
 
+  color = '#FFFFFF',
+  backgroundColor = 'transparent',
   blurIntensity = 35,
+  blurTint = 'dark',
+  showBlur = true,
+  pillBackgroundColor,
+  elevated = true,
+
   containerStyle,
-}: HeaderProps) {
+}: HeaderFlutuanteProps) {
   const insets = useSafeAreaInsets();
 
-  // Cores (fixas para reproduzir a imagem)
-  const textColor = '#FFFFFF';
-  const iconColor = '#FFFFFF';
+  const textColor = color;
+  const iconColor = color;
   const dividerColor = 'rgba(255,255,255,0.16)';
-  const pillBg = '#000'; // fundo da pílula
-  const searchBg = 'rgba(255,255,255,0.08)'; // campo de busca
+  const pillBg = pillBackgroundColor ?? '#000';
+  const searchBg = 'rgba(255,255,255,0.08)';
   const placeholder = 'rgba(255,255,255,0.60)';
 
   const isControlled = typeof searchValue === 'string';
@@ -86,19 +99,26 @@ export default function Header({
     if (!isControlled) setInternalSearch(t);
     onChangeSearchText?.(t);
   }
-
   function handleSubmitSearch() {
     onSubmitSearch?.(searchText);
   }
-
   function handleClearSearch() {
     if (!isControlled) setInternalSearch('');
     onClearSearch?.();
   }
 
+  const PillContainer = showBlur ? BlurView : View;
+  const pillProps = showBlur ? { intensity: blurIntensity, tint: blurTint as any } : {};
+
   return (
-    <View style={[styles.wrapper, { paddingTop: insets.top + 8 }, containerStyle]}>
-      <BlurView intensity={blurIntensity} tint="dark" style={styles.pillBlur}>
+    <View
+      style={[
+        styles.wrapper,
+        { paddingTop: insets.top + 0, backgroundColor },
+        containerStyle,
+      ]}
+    >
+      <PillContainer {...pillProps} style={[styles.pillBlur, elevated && styles.elevated]}>
         <View style={[styles.pill, { backgroundColor: pillBg }]}>
           {/* Esquerda: voltar + título */}
           <View style={styles.left}>
@@ -122,7 +142,7 @@ export default function Header({
             )}
           </View>
 
-          {/* Divisor vertical (entre título e busca) */}
+          {/* Divisor entre título e busca */}
           {showTitle && showSearch && <View style={[styles.divider, { backgroundColor: dividerColor }]} />}
 
           {/* Centro: busca */}
@@ -149,20 +169,22 @@ export default function Header({
             </View>
           )}
 
-          {/* Direita: sino */}
-          {showNotifications && (
-            <View style={styles.notificationWrapper}>
-              <IconButton
-                name="notifications-outline"
-                color={iconColor}
-                onPress={onPressNotifications}
-                accessibilityLabel="Notificações"
-              />
-              {hasNotifications && <View style={styles.badge} />}
-            </View>
-          )}
+          {/* Direita: sininho */}
+          <View style={styles.right}>
+            {showNotifications && (
+              <View style={styles.notificationWrapper}>
+                <IconButton
+                  name="notifications-outline"
+                  color={iconColor}
+                  onPress={onPressNotifications}
+                  accessibilityLabel="Notificações"
+                />
+                {hasNotifications && <View style={styles.badge} />}
+              </View>
+            )}
+          </View>
         </View>
-      </BlurView>
+      </PillContainer>
     </View>
   );
 }
@@ -193,7 +215,7 @@ function IconButton({
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 14, // margem lateral como na imagem
+    paddingHorizontal: 14,
     paddingBottom: 8,
   },
   pillBlur: {
@@ -206,7 +228,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    // sombra sutil
+  },
+  elevated: {
     shadowColor: '#000',
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -219,7 +242,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
   },
   titleNode: {
@@ -249,8 +272,13 @@ const styles = StyleSheet.create({
   clearButton: {
     marginLeft: 6,
   },
-  notificationWrapper: {
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: 7,
+    gap: 2,
+  },
+  notificationWrapper: {
     position: 'relative',
   },
   badge: {
