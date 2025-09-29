@@ -5,7 +5,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Feather from '@expo/vector-icons/Feather';
 export const FOOTER_HEIGHT = 45;
 
-export type TabPath = '/mapa' | '/traben' | '/glogo' | '/perfil';
+export type TabPath = '/mapa' | '/traben' | '/feed' | '/perfil';
 
 interface FooterProps {
   activePath?: string;
@@ -25,7 +25,7 @@ type ImageTab = BaseTab & { lib: 'img'; imgActive: any; imgInactive: any };
 const TABS: (IconTab | ImageTab)[] = [
   { path: '/mapa',   icon: 'route',    lib: 'mat' },
   { path: '/traben', lib: 'img', imgActive: LogoAtiva, imgInactive: LogoInativa },
-  { path: '/glogo',  icon: 'grid',  lib: 'fea' },
+  { path: '/feed',  icon: 'grid',  lib: 'fea' },
   { path: '/perfil', icon: 'person-outline', lib: 'ion' },
 ];
 

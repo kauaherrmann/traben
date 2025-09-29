@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,15 +21,25 @@ export type HeaderProps = {
   showBackButton?: boolean;
   onPressBack?: () => void;
 
-  // Menu (hambúrguer)
   showMenu?: boolean;
   onPressMenu?: () => void;
   menuIconName?: React.ComponentProps<typeof Ionicons>['name'];
 
-  // NOVO (já existia no type, agora implementado)
   showNotifications?: boolean;
   onPressNotifications?: () => void;
   notificationsBadgeCount?: number;
+
+  // NOVO: ícone de busca + barra central que abre ao clicar
+  showSearchIcon?: boolean;
+  searchActive?: boolean;                      // (controlado externamente opcional)
+  onChangeSearchActive?: (active: boolean) => void;
+  searchValue?: string;
+  onChangeSearch?: (text: string) => void;
+  onSubmitSearch?: () => void;
+  searchPlaceholder?: string;
+  searchAutoFocus?: boolean;
+  searchContainerStyle?: StyleProp<ViewStyle>;
+  searchInputStyle?: StyleProp<TextStyle>;
 
   color?: string;
   backgroundColor?: string;
@@ -37,7 +48,7 @@ export type HeaderProps = {
 };
 
 export default function Header({
-  title = 'Perfil',
+  title = 'Título',
   showTitle = true,
   titleStyle,
   showBackButton = false,
@@ -51,13 +62,46 @@ export default function Header({
   onPressNotifications,
   notificationsBadgeCount = 0,
 
+  showSearchIcon = false,
+  searchActive,
+  onChangeSearchActive,
+  searchValue,
+  onChangeSearch,
+  onSubmitSearch,
+  searchPlaceholder = 'Pesquisar...',
+  searchAutoFocus = false,
+  searchContainerStyle,
+  searchInputStyle,
+
   color = '#FFFFFF',
   backgroundColor = 'transparent',
   bottomDivider = false,
   containerStyle,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const [internalActive, setInternalActive] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+
+  const active = searchActive !== undefined ? searchActive : internalActive;
   const hasBadge = notificationsBadgeCount > 0;
+
+  const setActive = (v: boolean) => {
+    if (searchActive === undefined) setInternalActive(v);
+    onChangeSearchActive?.(v);
+  };
+
+  const toggleSearch = () => {
+    const next = !active;
+    setActive(next);
+  };
+
+  useEffect(() => {
+    if (active && searchAutoFocus) {
+      // pequeno timeout para garantir layout
+      const t = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [active, searchAutoFocus]);
 
   return (
     <View
@@ -69,7 +113,7 @@ export default function Header({
       ]}
     >
       <View style={styles.row}>
-        {/* Esquerda */}
+        {/* ESQUERDA - Título + Back (inalterado) */}
         <View style={styles.left}>
           {showBackButton && (
             <IconButton
@@ -86,8 +130,55 @@ export default function Header({
           )}
         </View>
 
-        {/* Direita: Notificações (opcional) + Menu (opcional) */}
+        {/* CENTRO - Barra de busca somente quando ativa */}
+        {active && (
+          <View style={styles.center}>
+            <View style={[styles.searchContainer, searchContainerStyle]}>
+              <Ionicons name="search" size={18} color="rgba(255,255,255,0.65)" />
+              <TextInput
+                ref={inputRef}
+                value={searchValue}
+                onChangeText={onChangeSearch}
+                onSubmitEditing={onSubmitSearch}
+                placeholder={searchPlaceholder}
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                style={[styles.searchInput, { color }, searchInputStyle]}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+              />
+              {!!searchValue && (
+                <Pressable
+                  hitSlop={10}
+                  onPress={() => onChangeSearch?.('')}
+                  style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.55 }]}
+                  accessibilityLabel="Limpar pesquisa"
+                >
+                  <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.45)" />
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* DIREITA - Ícones (ordem: searchIcon (se ativo ou não) + notifications + menu) */}
         <View style={styles.right}>
+          {showSearchIcon && (
+            <Pressable
+              onPress={toggleSearch}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={active ? 'Fechar busca' : 'Abrir busca'}
+              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            >
+              <Ionicons
+                name={active ? 'close' : 'search'}
+                size={22}
+                color={color}
+              />
+            </Pressable>
+          )}
+
           {showNotifications && (
             <View style={styles.notificationWrap}>
               <Pressable
@@ -95,35 +186,25 @@ export default function Header({
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel="Notificações"
-                style={({ pressed }) => [
-                  styles.iconButton,
-                  pressed && { opacity: 0.6 },
-                ]}
+                style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
               >
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color={color}
-                />
+                <Ionicons name="notifications-outline" size={22} color={color} />
               </Pressable>
               {hasBadge && <View style={styles.badge} />}
             </View>
           )}
 
-            {showMenu && (
-              <Pressable
-                onPress={onPressMenu}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Menu"
-                style={({ pressed }) => [
-                  styles.iconButton,
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
-                <Entypo name="menu" size={24} color={color} />
-              </Pressable>
-            )}
+          {showMenu && !active && (
+            <Pressable
+              onPress={onPressMenu}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Menu"
+              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            >
+              <Entypo name="menu" size={24} color={color} />
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -147,10 +228,7 @@ function IconButton({
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => [
-        styles.iconButton,
-        pressed && { opacity: 0.6 },
-      ]}
+      style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
     >
       <Ionicons name={name} size={24} color={color} />
     </Pressable>
@@ -173,10 +251,10 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     height: 44,
-    paddingRight: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '70%',
+    gap: 6,
+    maxWidth: '55%',
   },
   titleLeft: {
     fontSize: 20,
@@ -190,6 +268,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  center: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 72, // garante espaço p/ esquerda (back+titulo) e direita (ícones)
+    height: 44,
+    justifyContent: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    height: 34,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  clearBtn: { paddingLeft: 4 },
   iconButton: {
     width: 44,
     height: 44,
